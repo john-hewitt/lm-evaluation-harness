@@ -1,6 +1,18 @@
 import transformers
 import torch
 from lm_eval.base import BaseLM
+from src.tasks.seq import SequenceLMModel
+
+def load_non_optimized_model(model):
+  model.to('cuda')
+  config = model.config
+  for k in vars(config):
+    if 'fused' in k or 'flash' in k:
+      setattr(config, k, False)
+  newmodel = type(model)(config)
+  newmodel.to('cuda')
+  newmodel.load_state_dict(model.state_dict())
+  return newmodel
 
 
 class HFLM(BaseLM):
@@ -36,11 +48,20 @@ class HFLM(BaseLM):
         # TODO: update this to be less of a hack once subfolder is fixed in HF
         revision = revision + ("/" + subfolder if subfolder is not None else "")
 
-        self.gpt2 = transformers.AutoModelForCausalLM.from_pretrained(
-            pretrained,
-            revision=revision,
-        ).to(self.device)
+        #self.gpt2 = transformers.AutoModelForCausalLM.from_pretrained(
+        #    pretrained,
+        #    revision=revision,
+        #).to(self.device)
+        #self.gpt2.eval()
+
+        # from flash-attention
+        #model = SequenceLMModel.load_from_checkpoint('../flash-attention/training/checkpoints/backpack-micro-flash-fp16/last.ckpt')
+        model = SequenceLMModel.load_from_checkpoint('../flash-attention/training/checkpoints/gpt2micro-flash-fp16/last.ckpt')
+        #model = load_non_optimized_model(model.model)
+        model = model.model.to('cuda')
+        self.gpt2 = model
         self.gpt2.eval()
+        print(self.gpt2)
 
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(
             pretrained if tokenizer is None else tokenizer,
@@ -119,6 +140,7 @@ class HFLM(BaseLM):
         logits returned from the model
         """
         with torch.no_grad():
+          with torch.autocast(device_type='cuda', dtype=torch.float16):
             return self.gpt2(inps)[0][:, :, :50257]
 
     def _model_generate(self, context, max_length, eos_token_id):
