@@ -24,6 +24,7 @@ class HFLM(BaseLM):
         subfolder=None,
         tokenizer=None,
         batch_size=1,
+        checkpoint=None,
     ):
         super().__init__()
 
@@ -55,10 +56,11 @@ class HFLM(BaseLM):
         #self.gpt2.eval()
 
         # from flash-attention
-        #model = SequenceLMModel.load_from_checkpoint('../flash-attention/training/checkpoints/backpack-micro-flash-fp16/last.ckpt')
-        model = SequenceLMModel.load_from_checkpoint('../flash-attention/training/checkpoints/gpt2micro-flash-fp16/last.ckpt')
-        #model = load_non_optimized_model(model.model)
-        model = model.model.to('cuda')
+        model = SequenceLMModel.load_from_checkpoint(checkpoint)
+        #model = SequenceLMModel.load_from_checkpoint('../flash-attention/training/checkpoints/backpack-small-flash-fp16/last.ckpt')
+        #model = SequenceLMModel.load_from_checkpoint('../flash-attention/training/checkpoints/gpt2s-flash-fp16/last.ckpt')
+        model = load_non_optimized_model(model.model)
+        #model = model.model.to('cuda')
         self.gpt2 = model
         self.gpt2.eval()
         print(self.gpt2)
