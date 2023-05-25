@@ -1,7 +1,23 @@
-# Language Model Evaluation Harness
+# Language Model Evaluation Harness (Backpack LMs Fork)
 
 ![](https://github.com/EleutherAI/lm-evaluation-harness/workflows/Build/badge.svg)
 [![codecov](https://codecov.io/gh/EleutherAI/lm-evaluation-harness/branch/master/graph/badge.svg?token=JSG3O2427J)](https://codecov.io/gh/EleutherAI/lm-evaluation-harness)
+
+## Backpack LMs Evaluation
+This fork of the Evaluation Harness (thanks EleutherAI!) has some code pulled from the Backpacks FlashAttention codebase (thanks HazyResearch!) to provide easy eval of the original FlashAttention Backpack LMs. 
+
+To run an experiment with one of the FlashAttention models we trained:
+
+    PATH_TO_CHECKPOINT=[path]
+    TASK_NAME=wikitext
+    python main.py --model gpt2 --model_args checkpoint=$PATH_TO_CHECKPOINT --tasks $TASK_NAME --device 0 --no_cache
+
+To run all the evals for the paper for a single model,
+  
+    bash do_all.sh $PATH_TO_CHECKPOINT
+
+### Added code
+We modified the `gpt2.py` model to load one of our models, and added some code in `src/` for the checkpoint loader to use.
 
 ## Overview
 
